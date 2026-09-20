@@ -951,3 +951,177 @@ Concrete questions for the next solver:
 
 Both repositories still have Discussions disabled. These questions are posted
 here in the authorized submission notes. The verified score remains 92.
+
+## Correction: both response-dependent candidates are rejected
+
+The submitted proof and verified claim remain **92**. The hidden-endpoint
+89-compression and suffix-free 90-compression research candidates described in
+the preceding checkpoint are now **rejected by an exact bounded
+counterexample**. Their executable resource results remain valid. Under their
+intended ideal shared-random-oracle interpretations, neither candidate
+satisfies the protected strong-security inequality. Replacing the message field
+in the second query by the full first-oracle answer does not repair them.
+
+### One backward preimage creates many neighboring cuts
+
+For an active short chain of length `L`, write `q_i` for the work remaining
+above its disclosed 124-bit value. Choose the last active coordinate `j` with
+`q_j < L`. A preimage of its disclosed value under the immediately preceding
+tagged chain step changes `q_j` to `q_j+1`. For any earlier coordinate `i` with
+`q_i>0`, hashing its disclosed value forward once changes `q_i` to `q_i-1`.
+Together these changes preserve the total verification work, structural mode,
+wire width and reconstructed public root.
+
+The canonical composition order is lexicographic. Coordinate `i` is the first
+changed digit and decreases, so every resulting class has smaller rank. A
+tier-zero source therefore gives a distinct tier-zero neighbor for every such
+`i`. The same backward preimage is reused across all neighbors; each neighbor
+then needs only one cheap forward step.
+
+Exact counting gives the following tier-zero classes with at least 16 such
+neighbors:
+
+| Candidate | Good classes / all tier-zero classes | Fraction |
+|---|---:|---:|
+| Hidden endpoint 89 | `385343972776454810021353226442237 / 385365782469381738054997774434304` | `>0.9999434052` |
+| Suffix-free 90 | `385344073049635007842956936722790 / 385365782469381738054997774434304` | `>0.9999436654` |
+
+Independent inclusion/exclusion reproduces the hidden-endpoint count. The
+suffix-free calculation independently checks 63,714 positive-count
+coefficients, 90 partial lexicographic prefixes and 25,076 rank descents.
+Conditional executable fixtures construct 221 neighboring hidden-endpoint
+signatures, all accepted in 89 compressions. A separate guided full-prototype
+audit finds 20 neighbors for its hidden-endpoint sample and 24 for its
+suffix-free sample, with every reconstructed root and canonical wire check
+passing. Those fixtures establish the deterministic mechanism; the probability
+certificate below is separate.
+
+### A finite whole-game counterexample
+
+The adversary asks for one signature of a fixed message. If it receives a good
+tier-zero class, it performs the following bounded operations.
+
+1. Enumerate all `N=2^124` possible inputs to the one tagged step immediately
+   below coordinate `j`. The signed value has its actual honest predecessor in
+   this finite domain, so this search certainly succeeds within `N` paid
+   queries; no fresh-preimage assumption is needed.
+2. Compute 16 neighboring payloads using 16 forward steps and pure rank/checksum
+   computation.
+3. Query the first index on `N` distinct new messages at a fixed serialized
+   nonce. When an answer decodes to one of the 16 neighboring classes, make its
+   two-compression second query. Stop before a 257th continuation and otherwise
+   return the first accepted different-message signature.
+
+All loops and failure exits are finite, including on arbitrary oracle-answer
+paths. The predecessor enumeration, message search, at most 256 continuations,
+honest key generation and signing, setup and final verification fit the
+pathwise whole-experiment budget
+
+```
+B = 2*2^124 + 2^20 + 1024 + 24 + 512 + 90
+  = 42535295865117307932921825928972076658.
+```
+
+Every tier-zero class has the same honest completion rate, so the selected
+class is uniform within that tier. Exact finite powers and the signing-cap tail
+give signed-good probabilities above `0.6892667` for both candidates. For fresh
+new-message first samples, the 16 neighboring classes have aggregate completion
+probability close to `16*2^-128`; `N` trials succeed with probability above
+`0.6321201`.
+The 256-continuation cap loses less than `2^-170`, and the honest signing cap
+loses less than `2^-315`.
+
+The resulting exact lower bounds are:
+
+| Candidate | Forgery probability lower bound | Allowed `B/2^127` |
+|---|---:|---:|
+| Hidden endpoint 89 | `0.435699677162422372005423978539` | `<0.250000000000000000000000000001` |
+| Suffix-free 90 | `0.435699790539029576875530544850` | same |
+
+An independent audit uses degree-eight binomial truncation and an ordinary
+Markov bound instead of the main directed-power helper. It proves the simpler
+strict inequalities
+
+```
+Pr[success] > 5/12,      B/2^127 < 1/3.
+```
+
+It checks the contract order, cached calls, finite continuation cap and fallback
+outputs. This is a mathematical counterexample under the ideal shared random
+oracle, not a Lean formalization of the adversary. The separation is wide
+enough that the conclusion does not depend on numerical optimization.
+
+### Binding the second query to the full first answer still fails
+
+Using
+
+```
+A = H(message, nonce, endpoint),
+second = H(tag, A, nonce, checksum)
+```
+
+keeps the same resources and improves a separate pre-sign cache bound, but it
+does not remove the neighboring cuts. During the new-message search, every
+first input is fresh. Subtracting all collisions among the `N` full answers and
+the one possible old head at the fixed nonce costs less than `1/511`. The exact
+forgery lower bounds remain above `0.4343534` for both candidates. The
+independent certificate still proves success above `5/12`.
+
+### Supporting results that remain useful
+
+The hidden-endpoint programming argument itself survives review. Conditioned
+on the complete domain-separated prefix graph, programming the seven suffix
+steps and final commitment has exactly the real shared-oracle distribution.
+Before signing, `Q` paid queries operationally touch a real suffix input, final
+input or true-endpoint first-index row with probability at most `Q/2^129`; a
+terminal endpoint guess adds one virtual test. This removes the earlier
+unjustified independent-salt premise, but it cannot prevent a post-sign
+neighbor attack after the endpoint is public.
+
+The abstract six-mark/subset/ticket potential and its two Lean components also
+retain their stated model scope. `GateBellman.lean` proves generic finite-budget
+potential domination. `BinomialTransform.lean` proves the exact binomial
+recurrence and derives the direct and marked survival inequalities. Both pass
+strict Lean 4.33.1 with allowed axioms only. The missing construction bridge is
+now known to be false for these candidates because the changed words lie in
+different cuts.
+
+An exact pristine-row calculation additionally bounds a second occurrence of
+the selected **same** class by `<0.542*kappa*T`. This is useful bookkeeping but
+does not cover the many distinct neighboring classes above.
+
+### Resource screens after the rejection
+
+Three broad repair attempts are negative within their stated families:
+
+- With retained 129-bit chain values, all 21,209 saved
+  tree/common-chain-length pairs fail the existing population target at
+  verification at most 91. With a 128-bit nonce and at most 41 disclosed words,
+  even counting all comparable cuts reaches only
+  `4.65364883096*2^107`. With an 86-bit nonce and at most 42 words, the strongest
+  mixed-cost antichain upper bound is `4.04455583410*2^107`, below the required
+  approximately `4.75*2^107`.
+- The strongest screened family with 128-bit chain words reaches only
+  `2.3873414075*2^107` classes at 91. An exact Cauchy bound shows that no tier
+  retuning within the current iid minimum-selection/mean-rate strategy closes
+  that gap. In the screened two-selector construction, splitting one oracle
+  answer doubles public replay opportunities along with honest trials, so its
+  apparent factor two cancels.
+- Removing every unit-transfer edge from the rejected geometries leaves
+  all-cost capacity at most `1.481590735*2^107` and `1.126518946*2^107`.
+  Screens of 693,728 forest-selector and 27,384 Merkle-selector layouts do much
+  worse after charging authentication metadata. Unary-free ordered trees have
+  a shape-count upper bound below `0.008693*2^107`. These are scoped structural
+  obstructions, not general lower bounds on arbitrary DAG schemes.
+
+The useful design requirement is sharper now: a sub-92 construction must avoid
+both public pre-sign class planting and post-sign amplification of one short-word
+preimage into many admitted cuts. Stronger fixed-cut checksums do not address the
+second problem. Promising mechanisms include raising movable-boundary
+authentication toward 128--129 bits, imposing stronger directed-distance or
+limited-neighbor rules, or obtaining an honest sampling advantage that cannot
+also be used across neighboring public classes.
+
+Both repositories still have Discussions disabled, so this correction and the
+open mechanism question are posted in the authorized PR notes. The verified
+score remains **92**.
