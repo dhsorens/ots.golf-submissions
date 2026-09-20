@@ -340,3 +340,149 @@ of `(1+x+...+x^L)^a`. Independent inclusion/exclusion checked 104,490
 cumulative coefficients, and direct bivariate polynomial multiplication
 recounted 23 trees, including the winner. This closes a combinatorial question
 for the saved family, not for arbitrary trees, DAGs or oracle algorithms.
+
+## A response-dependent checksum construction to investigate
+
+**This section is an unproved construction direction. The submitted score
+remains the officially verified 92. No 91-compression security certificate
+is claimed.** Exact geometry, honest availability, and checksum algebra now
+support a concrete next question; their connection to strong security is open.
+
+The ingredient comes from response-dependent opening sequences such as
+[DFORS](https://eprint.iacr.org/2020/564.pdf): use an earlier disclosed response
+in the query that chooses a later opening. A literal sequence of Merkle paths
+spends too many signature bits here. The proposed alternative uses a forest
+cut followed by one chain opening. The forest's full nonlinear authentication
+is retained.
+
+### Concrete resource layout
+
+Let S be a four-leaf star, and let B have children `(S, leaf, leaf, leaf)`.
+The prefix root has nine B children. Each of its 63 leaf chains has length
+15 and retains 126-bit values. Every prefix branch output retains 129 bits.
+A separate 129-bit suffix chain has length 57. One final hash commits the
+129-bit prefix root and 129-bit suffix endpoint to the 128-bit public key.
+Key generation stores every chain and branch value in the secret key, so
+signing later obtains disclosure values without extra reconstruction queries.
+
+Key generation costs exactly
+
+```
+63*15 + 18 nonroot branches + 3 prefix-root compressions
+      + 57 suffix steps + 1 final root = 1024.
+```
+
+Choose cuts with exactly 42 prefix disclosures, four to six of them wide
+branch stops. Add one 129-bit suffix word and a 65-bit nonce. Their canonical
+signature lengths are 5,498, 5,501, or 5,504 bits; the decoded class determines
+the width and position of every word.
+
+With `A(z)=1+z+...+z^15`, the independently recounted pair polynomial is
+
+```
+z^17 * (1+z+...+z^57) * (504*A^36 + 1260*A^37 + 504*A^38).
+```
+
+Here 17 charges 14 prefix branch compressions, two index queries, and the
+final root. Its coefficient at 91 is
+`1095633267439989883629831257669400`, about `6.75236 * 2^107` pairs.
+The coefficient at 90 is about `4.49463 * 2^107`. These are counts of an
+exact-cost cut family, not security conclusions.
+
+Five-bit branch tags distinguish the 19 prefix branch nodes. An S input has
+`4*126+5=509` bits; a B input has `129+3*126+5=512` bits. Both cost one
+compression. The prefix root's nine wide children cost three compressions.
+
+### A checksum small enough for the second index query
+
+Zero-extend each short word to 129 bits, placing the three padding zeros in
+the final limb `x2`, and split it into three elements of `F=GF(2^43)`.
+For 42 distinct public labels `alpha_i`, define
+
+```
+J_i(x0,x1,x2) = (x0,x1,x2, alpha_i*x0 + alpha_i^2*x1 + alpha_i^3*x2),
+checksum = sum_i J_i(word_i).
+```
+
+This checksum has 172 bits and costs no oracle compressions. The second
+query contains a 16-bit tag, the 256-bit message, the 65-bit nonce, and this
+checksum: 509 bits. A related 68-bit-nonce layout uses exactly 512 bits.
+Those lengths overlap branch queries, so the stage-two tag reserves leading
+five bits 31; branch tags use 0 through 18. Different tag widths alone would
+not have established domain separation.
+
+Each coordinate map is injective. Moreover, every nonzero checksum
+difference belongs to at most three coordinate images: membership is a
+degree-three equation in `alpha_i`. This bounds how many single-coordinate
+changes can produce the same nonzero checksum difference in a fixed cut.
+The field assertions have exact small-field checks; an executable field
+representation uses the irreducible polynomial
+`X^43+X^6+X^4+X^3+1`, checked by an exact Rabin calculation.
+
+The checksum alone is not binding. For labels a and b, changing both words
+by `(a+b,1,0)` preserves it. Also, two padded 126-bit words do not produce a
+uniform 172-bit checksum: the usual padding gives binary rank 169. Neither
+full checksum uniformity nor cryptographic binding may be assumed.
+
+The distinction between unary and branch widths matters. With weak
+126-bit branch outputs, two altered disclosures can meet at a single branch
+hash, so two word changes need not require two separate hash equalities.
+Widening every branch avoids that particular weak-branch coalescence. All
+weak unary chains must stay below the branches; a weak unary node above a
+branch would reintroduce the problem.
+
+### Honest signing must pay for second-stage rejection
+
+For a fixed total rank, each prefix cut represented in the admitted family
+has exactly one permitted suffix position. At cost 91 its prefix reconstruction
+cost is `31 <= r <= 88`, with suffix position `88-r`. Decoding the second
+answer only among permitted completions would
+make that answer irrelevant. Instead use a fixed 58-position suffix alphabet,
+with `floor(2^256/58)` aliases per position. Reject both unassigned oracle
+outputs and positions incompatible with the selected prefix.
+
+There is an exact honest-availability calculation for this structure. Put
+`L=2^20`, `T=L-8192=1040384`, and sample T distinct nonces uniformly without
+replacement. A first challenge passes a cheap filter with probability
+`5221/L`; on a pass it also selects a canonical admitted prefix. Make at most
+8,192 second queries, keeping completed paths and returning one by a fixed
+rule. The signing cost is pathwise at most `T+8192=L`.
+
+Every permitted suffix has probability
+`a=floor(2^256/58)/2^256`, with `5221*a>90` and `a>1/59`.
+Exact rational block bounds put failure below
+
+```
+(4/5)*2^-128 + 2^-138 < 2^-128.
+```
+
+The first term bounds no completed path over all T trials; the second covers
+stopping at the continuation cap before any success. Distinct nonces and
+separated query domains make the honest queries fresh conditional on the
+key and any public-key-dependent message. This is a different sampler from
+the verified construction's sampling with replacement. Its security proof
+does not transfer automatically. With `kappa=2^-127`, the effective-trial
+normalization is `kappa*T*M ≈ 6.69961` at cost 91. The raw pair count remains
+`M ≈ 6.75236 * 2^107`.
+
+### The open problem
+
+Can response-dependent checksum selection turn this resource-valid family
+into a strongly secure scheme in the actual shared-oracle game? The missing
+proof must handle different decoded cuts, prior index queries, hidden chain
+preimages, checksum coincidences, suffix derivations, and adaptive message
+selection under one charged budget. A marginal probability bound for one
+event is insufficient after conditioning on a selected signature.
+
+One useful abstract lemma is exact: if each next counted mark has conditional
+probability at most `2*kappa`, at most one mark occurs per trial, and there
+are at most B trials, the probability of two marks is at most `kappa*B`.
+Stop the counter at its second mark and take expectations. Applying that
+lemma requires a valid event definition and conditional bound in the actual
+game; two changed words alone do not establish either hypothesis.
+
+The concrete contribution here is a compact challenge input while retaining
+the complete nonlinear reconstruction, together with exact resource and
+honest-signing calculations. Establishing the missing game connection, or
+finding a failure of it, is the next useful step. The 92-compression proof
+files and claim remain unchanged.
