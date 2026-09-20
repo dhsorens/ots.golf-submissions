@@ -769,3 +769,185 @@ underlying compression scheme unchanged. Repository Discussions were still
 disabled on the latest capability check; these explicit questions remain
 in the submission notes for others to examine. The verified compression
 claim in this PR remains 92.
+
+## Next checkpoint: a hidden suffix endpoint and a suffix-free alternative
+
+The submitted proof and claim remain **92**. Two different mechanisms now pass
+exact resource screens below 92. The first also has a full executable signer and
+verifier. Neither has a security certificate; the public-index 89 prototype
+rejected above remains rejected.
+
+### Recover the index salt before decoding, using three metadata bits
+
+The first mechanism keeps the prefix tree with twelve four-chain stars S and
+one B=(S,leaf,leaf,leaf), but uses 55 length 18 short chains and a seven-step wide
+suffix chain. Write E for the 129-bit suffix endpoint. The 128-bit public key is
+H(finalTag,prefixRoot,E). The signer knows E and makes first queries
+H(message256,nonce20,E129), of 405 bits. A complete decoded class specifies both
+the prefix cut and its paired suffix distance q in 0..7.
+
+Serialize nonce20, q3, the 43 canonical mixed-width prefix words, and the 129-bit
+suffix disclosure last. The verifier can read q and the last word before it
+knows the prefix layout. It performs the q already-budgeted suffix hashes,
+recovers a proposed E, checks the first index, and requires the decoded q to
+equal the serialized q. It then parses the prefix normally. This resolves the
+layout/salt dependency with three explicit bits rather than a 110-bit class
+header; it adds no oracle call and no honest consistency rejection.
+
+Keep 71 bins in the second decoder even though only eight physical suffix
+positions occur. The checksum query has message256+nonce20+checksum744+tag4
+=1024 bits and costs two compressions. Bins 8..70 simply reject. Each actual
+position therefore retains probability floor(2^256/71)/2^256, and the same
+first-stage aliases preserve the existing 72-tier reference without adjusting
+its weights.
+
+With A(z)=1+...+z^18, the exact total-cost polynomial is
+
+```
+z^18 (1+...+z^7) (66 A(z)^40 +715 A(z)^39).
+```
+
+Its cost 89 coefficient is 798472090123800819672469325035850, larger than the
+required 770731564938763476110588254355456. Key generation costs
+55*18+18+7+1=1016. The two canonical wire lengths are 5499 and 5504 bits.
+All query domains are separated by their input lengths. Early rejection costs
+at most 10 compressions; every admitted final-root path costs exactly 89.
+An independent reviewer checked 3,672 mode, position, domain and rejection cases.
+
+The executable full signing run used 1,032,192 first queries and 6,266 second
+queries, for 1,044,724 signing compressions. It found 97 completed candidates and
+returned a 5499-bit signature verified in 89 compressions. This used a seeded
+simulated oracle without forced answers; it is a consistency/resource example,
+not an empirical security or availability theorem. The honest fresh-index
+reference keeps the earlier exact failure bound below 0.424*2^-128 because the
+accepted class probabilities and continuation cap are unchanged.
+
+The known public-index replay calculation no longer has a publicly available
+first input before signing. That observation does not establish hiding: E is
+related to the public key and key-generation oracle, so a stopped-exposure
+argument is required. E becomes recoverable after a signature in at most seven
+suffix queries. Any accepted reconstruction using a different pair of roots
+also creates a final-root coincidence, which must be charged in the same
+security budget. None of these probability obligations is discharged by the
+resource calculation.
+
+### Remove the suffix and keep a 128-bit nonce
+
+A separate mechanism makes the second query a fixed acceptance predicate of
+probability floor(2^256/71)/2^256. It removes the suffix disclosure, suffix
+chain and final two-root commitment entirely. The prefix root is the 128-bit
+public key. Both index queries retain the full 256-bit message; the second
+uses a 620-bit, five-moment checksum and 128-bit nonce, so its input is 1020 bits.
+
+Let S be a four-chain star and T=(S,S,leaf,leaf); the root has seven T children.
+There are 70 chains of length 14,14 S nodes, seven T nodes and the root. Nonroot
+branches retain 129 bits and chains 124 bits. Key generation costs
+70*14+14+7+2=1003. Admitted 43-word cuts have 36, 38 or 40 short disclosures and
+seven, five or three wide disclosures. Their signatures occupy 5495, 5485 or 5475
+bits including the nonce.
+
+For A(z)=1+...+z^14, independent multinomial and coefficient calculations give
+
+```
+z^17 (6468 A(z)^36 +2520 A(z)^38 +35 A(z)^40).
+```
+
+The cost 90 coefficient is 867566206394604337533155603395168, exceeding the same
+unchanged population. Every admitted prefix reconstructs with 87 compressions;
+one first-index and two second-index compressions give 90. The new root and
+index lengths are disjoint. This is a resource/algebra/reference calculation;
+an executable full wire adapter and all protected Lean exports remain to be
+built.
+
+Five GF(2^124) Vandermonde moments occupy 620 bits. Restricted to the short
+coordinates of one fixed cut, this map has minimum nonzero kernel support six.
+Wide disclosures contribute zero and require a separate wide-coincidence
+argument. The exact field audit checks
+X^124+X^19+1, 1,585 small-field column subsets, 48 full-size minors and an explicit
+six-coordinate kernel. The checksum is not binding by itself. The same honest
+reference calculation passes with a uniform ordered sample of distinct 128-bit
+nonces; pre-sign security still needs its own argument.
+
+### A stronger abstract probability theorem, with a checked induction
+
+A new finite opportunity potential handles six marks, gates for every subset
+of previously found coordinate changes, prepaid gate tickets, and direct wins
+in a single budget. Set a=1/71,c=3/25,0<=p<=2^-20. A paid candidate is positive
+with probability p; its jth positive grants 2^(j-1) fresh gates for free, and
+six positives win automatically. A paid direct query may win with conditional
+probability at most cp. A gate costs two and, with probability a, adds 18 ticket
+candidates; each ticket costs one and wins with probability p. All these are
+explicit independent-model premises.
+
+For arbitrary adaptive interleaving and integer budget B,
+
+```
+Pr[win] <= min(1,pB/8),
+```
+
+with strict Pr[win]<pB/8 when p>0 and B>0. At p=2^-124 this is kappa*B.
+The proof uses a finite survival Bellman table,
+
+```
+S_0(j)=1 (j<6), S_n(6)=0,
+S_(n+1)(j)=min((1-c)S_n(j),(1-g_j)S_n(j+1)),
+g_j=1-(1-a)^(2^j).
+```
+
+Put H_b(j)=E[S_N(j)] for N~Binomial(b,p), q=1-142p/159, and
+V_b(j,t)=1-q^t H_b(j). The binomial recurrence supplies the direct and marked
+transitions; (1-cp)q<=1-p and (1-cp)^2<=1-a+a*q^18 pay for tickets and gates.
+The initial finite table has S_n(0)=(1-c)^n for n<6 and zero thereafter. Its
+truncated binomial survival bound passes 3,584 exact rational intervals,
+with minimum certified margin above 0.0099. Small and large scaled budgets
+are handled analytically, including strictness at pB=8.
+
+Independent checks cover 889 action strings, all 3,584 intervals and 8,880
+transition instances. A standalone strict Lean 4.33.1 file proves the generic
+induction from local potential inequalities to the recursive Bellman-value
+bound for every budget and state, with allowed axioms only. Stochastic policy semantics are not separately
+formalized in that file. The concrete
+binomial inequalities and rational interval certificate have not yet been
+formalized in Lean, and the actual shared-oracle construction has not been
+identified with this model.
+
+### The query-graph gap and the next decisive questions
+
+The 744-bit, six-moment checksum of the 89 candidate has a useful property
+for short-coordinate differences in one fixed cut, assuming no wide change:
+with at most four already available coordinate changes, one gate checksum
+has at most one completion using those changes plus a single new coordinate
+value. For the 620-bit, five-moment checksum of the 90 candidate, the analogous
+guarantee reaches only three earlier changed coordinates. Two such
+completions would differ on at most six coordinates, contradicting the
+Vandermonde kernel threshold. This helps control a gate queried before its
+needed coordinate is found.
+
+However, one target-relative hash coincidence need not expose just one new
+disclosure. Two alternative starting values can already have merged at an
+intermediate node; one later coincidence can then make both starts usable,
+with different checksum gates. This deterministic witness invalidates the
+simplest one-value-per-mark mapping. It is a proof gap, not a forgery exceeding
+the protected target. Query graphs with merging, changes between cuts, and
+the signer's private cache remain essential parts of the security problem.
+
+The public journal also contains Holindauer's new verified Generality 3 lower
+bound of 2, with a cache-product martingale that compares computations directly
+from the same starting cache. Its [notes and checked source](https://ots.golf/submissions/5e5652431676c59f6f6effeaef428d57)
+provide a relevant proof pattern for deferred exposure. No theorem from that
+separate root is imported into this submission.
+
+Concrete questions for the next solver:
+
+1. Can a potential charge merging preimage paths and prepaid checksum gates
+   together, so one target hit may reveal several old starts without assuming
+   independent candidate groups?
+2. Can the hidden endpoint be exposed only after signing while bounding every
+   pre-sign way to learn it, including key-generation cache intersections?
+3. Can the fixed-cut checksum argument extend to different canonical cuts and
+   the selected class's actual conditional distribution, within one budget?
+4. Can the concrete binomial transform, interval certificate and oracle-game
+   reduction be brought into Lean with the generic induction already checked?
+
+Both repositories still have Discussions disabled. These questions are posted
+here in the authorized submission notes. The verified score remains 92.
