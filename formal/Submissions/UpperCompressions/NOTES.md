@@ -104,9 +104,13 @@ on the exact raw scheme, with only `propext`, `Classical.choice`, and `Quot.soun
 transfer for strong security, including same-message alternate signatures.
 `Solution.lean` exports these exact declarations under the contract's names.
 
-The full staged root must still pass the official import policy, file limit,
-axiom audit, statement comparison, and kernel replay. The mathematical result
-is checked; the official submission result and any new record remain pending.
+The hosted verifier accepted the complete submission as a new record on
+2026-09-20: **92 compressions**, down from 100. Its durable result is
+[submission 4abfb06a48549d67349e07c50b4dc5ca](https://ots.golf/submissions/4abfb06a48549d67349e07c50b4dc5ca),
+checked at commit `7be6d31b9de82713e5b088f17e62e30a9198a734` in 318.7 seconds.
+The original protected source tag and bot verdict retain that record.
+This subsequent update changes only these notes; every Lean file and
+`claim.txt` remains byte-identical to the official record source.
 
 Further improvements should search the weighted tier schedule and the
 disclosure-family geometry together, then reuse the exact first-minimum kernel
@@ -155,3 +159,184 @@ permit some nearby cut pairs, or can a construction obtain comparable class
 capacity with stronger authentication? A raw capacity count alone cannot
 answer that question. The92-compression construction remains the proved
 candidate described above.
+
+## Research after the verified 92-compression result
+
+The original 92-compression record is the checked source at
+`7be6d31b9de82713e5b088f17e62e30a9198a734`, with durable submission
+[4abfb06a48549d67349e07c50b4dc5ca](https://ots.golf/submissions/4abfb06a48549d67349e07c50b4dc5ca).
+The results below are subsequent mathematical experiments. They are not new
+Lean security certificates or improvements to the score.
+
+Write `L = 2^20`, `κ = 2^-127`, and normalize a class count by
+`C = κ L M = M / 2^107`. The reference class-selection bound near `C = 4`
+is a useful necessary gate for the existing method. A large class count is
+not sufficient for security.
+
+### A simpler reason the homogeneous 126-bit shortcut fails
+
+The earlier raw 88-cost geometry uses 126-bit chain values. In a standard
+tagged chain verifier, an exposed word with a unary successor permits an
+altered signature on the same message: replace that word by a different
+input with the same truncated successor. The nonce and decoded cut stay
+the same. Changing the class code therefore does not fix this problem.
+
+With a distinct tag for each step, exclude the known input and make `Q`
+distinct fresh queries. Conditional on the public signature, their collision
+probability is exactly `1 - (1 - 2^-126)^Q`. At `Q = 2^30`, the rational
+Bonferroni lower bound, multiplied by availability, is more than `999/500`
+times the protected allowance for the complete budget `Q + 2^20 + 1200`.
+The reservation includes key generation, signing, recovering the index and
+successor, and final verification. This argument marginalizes the private
+key-generation cache; it does not condition on that whole cache.
+
+An exact structural check of the 1,076 current-population contenders in the
+11,420-tree screen found at least 72 unary reconstruction steps in every
+rank-87 cut. Thus every successful signature supplies the required unary
+step in those standard homogeneous constructions. The conclusion is scoped
+to that reconstruction format and fresh tagged-row law, not arbitrary
+schemes using some 126-bit values.
+
+### Wider successors remove that shortcut but lose the count
+
+A separate screen uses 126- and 129-bit values, requiring every short chain
+value to have a wider immediate successor. It charges the actual child
+widths and tags at every branch. With an 86-bit nonce, at most 42 disclosed
+values always fit; 43 fit only when every one is 126 bits.
+
+Across 8,067 configurations at verification cost at most 88, the largest
+exact upper bound on arbitrary bit-valid mixed-rank antichains is
+
+```
+255015635831753169874095471555229 ≈ 1.5716551978730366 * 2^107.
+```
+
+The bound partitions cuts by structural frontier. Within a frontier,
+ordinary chain positions form a product of finite chains. For a 43-word
+frontier, alternating short positions form another product after writing
+each coordinate as `s_i + 2 q_i`. A symmetric-chain decomposition bounds
+each truncated product by its largest permitted rank. Summing across
+frontiers ignores extra comparabilities and gives an upper bound.
+
+Independent matching checks covered 1,440 small instances. One has width
+seven although its largest cost layer has only five cuts, so replacing
+antichain width by the largest layer without this argument would be wrong.
+The result excludes the saved configurations, not all mixed-width DAGs,
+chain-length allocations or encodings.
+
+### Shared outputs and smaller pieces
+
+Using both 128-bit halves of one oracle answer gives real local gains. A
+shared ring has width 12 where matched separate calls have width nine.
+The bounded product screen covered 139 graphs and 219,125 lift/repetition
+scenarios. Its best exactly recounted family at cost 88 has
+`175982422495699553309800413070113` classes, or `C ≈ 1.084575414945`.
+Sharing adds only 0.0658345455% to its matched plain forest. The
+disclosure-saving forks occur in expensive reconstruction tails.
+
+A further experiment splits answers into three 65-bit pieces and accounts
+for recovery of a sole unknown short input. It also rejects boundaries
+constrained through just one short output: two hidden input pieces do not
+by themselves provide a 130-bit check. There is a surviving local width-22
+example, but the best exactly recounted split-output amplification reaches
+only 0.654% of the working class-count target. The amplified split-output
+counts are optimistic frontier counts, without full product antichain or
+security proofs. These are bounded structural screens, with numerical
+shortlisting and explicitly limited lift choices; they do not establish a general partial-word lower bound.
+
+### Cheap proof components still need an oracle-aware relation
+
+A Merkle transcript component with `2^18` records fits 5,248 proof bits,
+786,433 signing compressions and 22 verification compressions. It still
+accepts a transcript containing one false record with probability
+`262143/262144`. Even 80 ideal direct record checks leave miss probability
+`16379/16384`. Authenticating a transcript does not make all its entries
+correct.
+
+Baseline three-party [ZKBoo](https://eprint.iacr.org/2016/163.pdf), at its
+ideal repetition error at most `2^-127`, uses 218 repetitions. Merely checking
+two opened commitments per repetition requires at least 436 compressions;
+one unopened 256-bit digest per repetition already takes 55,808 bits.
+These are baseline-format counts, not lower bounds for every proof system.
+More fundamentally, a circuit proof does not automatically implement an
+opaque random-oracle gate on a private input. For example, the extended
+circuit model in [EOS, Definition 3.1](https://www.usenix.org/system/files/usenixsecurity23-chiesa.pdf)
+requires public inputs at random-oracle gates.
+
+Public-key side information has a related obstacle. Conditioning a payload
+on both its random root and the complete oracle table can reduce entropy,
+but the verifier is not given that table. Literal fiber ranking requires
+oracle work to decode. A linear root can make an omitted word recoverable
+for free, but that equation alone does not bind the remaining freely
+adjustable values. No low-cost decoder with the required binding resulted
+from these proposals.
+
+Likewise, hashing a short public Vandermonde syndrome of many child values
+does not inherit the binding of their full concatenation. With independently
+variable, verifier-consistent child payloads, the syndrome kernel permits
+multiway matches among random output lists. Ordinary tuple search is free
+in this model. The exact list calculations rule out the tested short-syndrome
+instantiations under those assumptions; they do not rule out every nonlinear
+aggregation mechanism.
+
+### A remaining direction: weighted comparable cuts
+
+An antichain-only decoder discards every cut derivable from another accepted
+cut. An alternative is to retain comparable cuts and charge the entire
+forward-compatible index mass of each returned signature.
+
+There is a positive reference-model calculation. Take `W` mutually
+incomparable two-state chains. In a chain with scaled endpoints `a <= b`,
+assign class probabilities `a/(LW)` and `(b-a)/(LW)`. Their compatible masses
+are `a/(LW)` and `b/(LW)`. Choose the smallest endpoint seen in `L` trials.
+A rational mixture of 209 chain types gives
+
+```
+W L * mean compatible mass < 2.3,
+reference failure < 2^-128.
+```
+
+The mean is unconditional, with failure contributing zero.
+
+The reproduced upper value is about 2.29432937352; a one-state numerical
+control is about 4.00766. The two-state improvement is per independent
+chain. There are `2W` accepted classes, so it does not contradict the
+earlier bound normalized by total class count.
+
+The finite calculation uses the exact survival-integral formula and
+`(1-S/L)^L <= exp(-S)`. An even degree-10 Taylor polynomial at `S/128`, raised
+to 128, supplies rational exponential upper bounds. Atom fractions have
+denominator `2^80`; endpoints have denominator `2^40`. The final comparisons
+use integer arithmetic. An independent enumeration checks 48 small finite
+instances, including ties and failure.
+
+The simple embedding fails: reserving one chain coordinate for two states
+and using a fixed-rank antichain in the other coordinates sacrifices too
+many cuts. Even an optimistic sum for the 66-chain tree gives only
+`W/2^107 ≈ 1.29543` at verification 92, below what this design needs.
+A useful successor must embed comparable cuts much more densely and include
+every cross-chain derivability relation. It still needs a concrete decoder,
+canonical encoding, availability and an adaptive shared-oracle proof.
+
+### Counting every comparable cut still limits the saved trees
+
+An exact screen counted all canonical cuts through each cost cap in all
+21,209 saved 129-bit trees, including comparable cuts and the root-only cut.
+There were no floating-point exclusions or sampled omissions.
+
+| Verification cap | Maximum cumulative count | Count / 2^107, approximately |
+| ---: | ---: | ---: |
+| 88 | 606612830856032099116847560801318 | 3.7385402099 |
+| 89 | 908816182055200740272159602017498 | 5.6010121567 |
+| 90 | 1355169996288672520422231030035486 | 8.3518799219 |
+
+The same 66-chain tree uniquely maximizes all three. At cost 88, every saved
+tree falls below the reference class-count gate near `4 * 2^107` even before
+an antichain restriction. At costs 89 and 90, respectively 2,398 and 9,279
+trees reach that raw threshold; their counts alone imply no security result.
+
+The screen uses exact structural-mode products and cumulative coefficients
+of `(1+x+...+x^L)^a`. Independent inclusion/exclusion checked 104,490
+cumulative coefficients, and direct bivariate polynomial multiplication
+recounted 23 trees, including the winner. This closes a combinatorial question
+for the saved family, not for arbitrary trees, DAGs or oracle algorithms.
