@@ -1,10 +1,15 @@
-# Candidate 92: weighted minimum selection over disclosure cuts
+# Verified 92: weighted minimum selection over disclosure cuts
 
 This construction has a Lean-checked verifier bound of 92 hash compressions on
 every raw input and every oracle-answer path, together with the exact contract's
-raw-signature admissibility and strong-security theorems. The existing record
-is 100; official verification and publication of 92 are pending. An isolated
-mathematical check does not replace the hosted verdict or establish a new record.
+raw-signature admissibility and strong-security theorems. The hosted verifier
+accepted 92 as a new record in 318.7 seconds, improving the previous 100.
+The [durable verdict](https://github.com/leanEthereum/ots.golf-submissions/pull/8#issuecomment-5747949677)
+retains the original checked source `7be6d31b9de82713e5b088f17e62e30a9198a734`.
+
+Later sections retain the research sequence. The final checkpoint records the
+rejection of the 89-compression prototype by a pre-sign replay counterexample;
+none of the follow-up experiments changes the verified claim of 92.
 
 The construction combines a compact disclosure forest with an uneven
 distribution over its admissible cuts. Signing searches for a low-tier cut;
@@ -486,3 +491,281 @@ the complete nonlinear reconstruction, together with exact resource and
 honest-signing calculations. Establishing the missing game connection, or
 finding a failure of it, is the next useful step. The 92-compression proof
 files and claim remain unchanged.
+
+## Further checkpoint: executable references and a pre-sign replay obstruction
+
+The submitted proof and claim remain **92**. The resource-correct
+89-compression prototype described below is **rejected by an exact pre-sign
+replay counterexample**. Its honest-signing calculation and the independent
+probability lemmas remain useful, but they do not establish security.
+The larger-checksum idea alone cannot fix unchanged-payload replay.
+
+### The 91-compression reference is executable
+
+The nonce-65 construction now has a canonical rank/unrank decoder, full key
+generation, mixed-width wire codec, capped signer and verifier.
+The executable signer uses a fixed nonce order, whose security limitation is
+explained in the replay section below. The uniform-distinct sampler remains
+a separate, unproved reference. Structural
+patterns use multinomial ranking; bounded-composition counts unrank the
+chain costs and paired suffix. All 2,268 structural patterns, 537 boundary
+and random geometry ranks, and 2,925 independently recounted coefficients
+passed. Guided correctness fixtures cover both rejection paths and all
+canonical lengths; malformed wires are rejected.
+
+One complete sampled signing execution, without forced oracle answers,
+used 1,040,384 first queries and 5,133 second queries, found 93 completed
+candidates, and returned a 5,501-bit signature that verified in exactly 91
+compressions. Key generation used exactly 1,024 compressions. This is an
+executable consistency/resource check using a reproducible simulated oracle,
+not an availability estimate, production cryptography or a security proof.
+
+### A combined probability lemma
+
+Consider mutually independent groups, each with one Bernoulli(a) gate and
+at most d Bernoulli(p) candidate bits. Queries reveal one bit at a cost of
+one; arbitrary adaptive interleaving and cached repeats are allowed. Success
+requires either two distinct observed positive candidates anywhere or an
+observed positive gate and positive candidate in the same group.
+
+If a<=1/2 and a*d<=1, then for every p and integer budget B,
+
+```
+Pr[success] <= min(1,p*B/2).
+```
+
+Before any positive candidate, let t count unread candidates whose gates are
+already known positive. The potential p*(b+t)/2 covers b remaining queries.
+A gate query creates at most d tickets with probability a, which its budget
+decrement pays for when ad<=1. A ticket query either wins or consumes its
+ticket. An unticketed positive enters a one-positive state; granting its
+gate query for free bounds that state's success by (1+pb)/2. These three
+transitions prove the result by finite induction. This bounds the combined
+event directly. The conditions are also necessary for uniform validity
+over all p and B; simple small-p policies violate it when either fails.
+
+The exact dynamic program checked 1,375 in-regime budget cases and an
+independent labeled-history solver agreed on 27 small cases. For a=1/58,
+d=45 or 48, and p=2*kappa, the theorem gives kappa*B. It remains an abstract
+independent-bit theorem: identifying those groups with shared-oracle
+observations is a separate obligation. Standalone Lean files already check
+the weaker grouped-gate moment algebra and its sharper query-cost
+optimization; the full combined-policy induction is not yet formalized.
+
+### Suffix forest capacity screen
+
+Replacing the single suffix chain with two through seven wide chains lost
+capacity in a screen of 151 prefix trees and 28,690 resource layouts. At
+score 91, the best normalized pair counts were 6.75236 for one suffix word,
+5.52601 for two, and 4.99074 for three; the corresponding suffix alphabets
+grew from 58 to 729 and 4096. Every tested capacity/alphabet Pareto point at
+scores 86, 88, 90 and 91 used one suffix chain. This rejects the tested family,
+not all possible response-dependent suffix constructions.
+
+### More checksum constraints without paying for another query
+
+A 215-bit checksum over GF(2^43) maps each 129-bit word x=(x0, x1, x2) at a
+nonzero label a to
+
+```
+q = x0+a*x1+a^2*x2
+J_a(x) = (x0,x1,x2,a*q,a^2*q).
+```
+
+Every nonzero difference belongs to at most two coordinate images: either
+its last two components determine a, or its first three define a nonzero
+quadratic with at most two roots. Injectivity and this generic-field
+statement pass strict Lean 4.33.1 with allowed axioms only. The checksum
+still has explicit two-coordinate kernels; fewer explanations of a nonzero
+difference does not imply stronger binding at difference zero.
+
+A separate Vandermonde checksum uses moments 0..r-1 over a larger field.
+Every r distinct columns are independent, so equal checksums require at least
+r+1 changed coordinates. Four 129-bit symbols cost 516 bits; five cost 645 bits,
+and both fit a two-compression second query at the tested nonce widths.
+The latter is therefore a stronger algebraic choice at the same query cost.
+Exact Rabin checks certify the executable field polynomial X^129+X^5+1.
+These bit-field calculations are not yet linked to Lean.
+
+For 124-bit short chain words, six GF(2^124) symbols take 744 bits. Assign zero
+checksum contribution to the 129-bit branch disclosures and label short
+values by their fixed DFS positions. Under the fixed-cut structural lemma,
+a changed wide disclosure already entails the separate wide-coincidence
+alternative. Otherwise equal checksums and changed prefix data require at
+least seven distinct weak unary coincidences. The exact field polynomial
+X^124+X^19+1 passes a Rabin irreducibility certificate; 2,509 complete
+small-field minors and 48 large-field minors also pass. A seven-coordinate
+kernel witness confirms that the map is still not binding by itself.
+
+### Concrete 89-compression resource and honest-signing reference
+
+Let S be a four-chain star and B=(S,leaf,leaf,leaf). Use a prefix root with
+twelve S children and one B child: 55 chains of length 17, retaining 124 bits;
+every branch retains 129 bits. Add a 129-bit suffix chain of length 70 and
+a final root committing both roots. Key generation costs
+
+```
+55*17 +18 prefix branch compressions +70 suffix steps +1 final root =1024.
+```
+
+Choose 43-word prefix cuts with at most four wide stops. Their fixed-cost
+polynomial, including the suffix, is
+
+```
+z^18 * (1+z+...+z^70) * (66*A(z)^40 +715*A(z)^39),
+A(z)=1+z+...+z^17.
+```
+
+The score 89 coefficient is 817424621335596697141127222311949. Every prefix
+has a unique suffix partner at this total cost. A 20-bit nonce yields
+canonical lengths 5,496 or 5,501 bits. The second query has exactly
+256+20+744+4=1024 bits and costs two compressions. All other query lengths
+are distinct from 1024. Thus the resource accounting is concrete, but the
+20-bit nonce is ruled out by the pre-sign/cross-message calculation below.
+
+The existing 72-tier reference fits this capacity after increasing only the
+last population from 91*2^33 to 107*2^33. Individual rates stay 2^(j-128);
+total complete-trial reference mass is 91/2^20. Give each tier-j class
+71*(2^128+1)*2^j first-index aliases. The second decoder divides its answer
+space equally among 71 fixed suffix positions, rejecting 60 leftover answers
+and all positions except the class's paired suffix.
+
+Scan T=2^20-16384 distinct nonces, permit 8,192 second queries at two
+compressions each, and abort/discard candidates on prefix overflow.
+Exact integer and directed-interval calculations give
+
+```
+total signing cost <=2^20
+prefix overflow probability <2^-315
+total signing failure <0.424 *2^-128
+uncapped mean selected individual-class rate <0.911 *kappa.
+```
+
+The last quantity is not a compatible-class or full-security bound.
+
+The 89-compression candidate now also has an executable canonical decoder,
+codec, key generator and verifier. Its full sampled signing run used
+1,032,192 first queries and 6,266 second queries (costing two compressions
+apiece): 1,044,724 signing compressions total. It found 97 completed
+candidates and returned a 5,501-bit signature that verified in exactly 89
+compressions. No oracle answers were forced in this run. The message was
+chosen as the public key concatenated with itself. Independent checks cover
+2,952 composition coefficients, all 781 structural patterns, 523 ranks,
+64 guided signatures, 512 malformed wires and the continuation overflow.
+This is executable consistency evidence, separate from security.
+
+### An exact seven-mark ticket potential
+
+The numerical experiments led to an all-budget theorem for an auxiliary
+independent model. Its state has fewer than seven positive marks and t
+unread candidates behind positive gates. Ticket candidates cost one and
+win with probability p. Unticketed positives receive a free gate chance
+1/71, then add a mark if that chance fails. A gate costs two and supplies
+17 tickets with probability 1/71. Seven marks also win. Additionally allow
+one-cost direct winning queries with conditional probability at most 3p/25.
+For every adaptive policy, integer budget B, and 0 <= p <= 2^-20,
+
+```
+Pr[win] <= min(1,p*B/8).
+```
+
+The proof uses a multiplicative survival potential:
+
+```
+q=1-142p/159, u=1-3p/25, z=p*(70/71)/(1-p/71)
+V_b(j,t)=1-q^t*u^b*Pr[Binomial(b,z)<=6-j].
+```
+
+The binomial recurrence and three scalar inequalities pay for each action
+against the same budget. For the initial state, small pB follows from a
+seventh factorial moment, pB >= 8 is automatic, and 1 <= pB <= 8 is covered
+by 1,792 exact rational intervals with a strictly positive margin. The
+script checks 23,275 additional exact transitions. Thus this is a finite,
+all-budget mathematical certificate, not a Poisson extrapolation or a
+floating-point observation. At p=2^-124=8*kappa it yields kappa*B.
+
+The adaptive-policy theorem is not yet formalized in Lean. Its independent
+coins and permitted direct conditional rates have not been established for
+the shared-oracle construction. In particular an unconditional mean class
+rate cannot replace a conditional-rate premise, and gates on several
+changed coordinates remain outside this auxiliary model.
+
+### Exact rejection of the 20-bit nonce design
+
+Query the first index on q=2^72 distinct messages at nonce zero. Tier zero
+has n=19*2^104 classes with individual first-answer probability
+r=71*(2^128+1)/2^256. If X counts unordered message pairs decoding to the
+same tier-zero class, then
+
+```
+E[X]   = choose(q,2)*n*r^2
+E[X^2] = E[X]+6*choose(q,3)*n*r^3+6*choose(q,4)*(n*r^2)^2.
+```
+
+The exact second-moment bound gives Pr[X>0] > 0.994682784476. Select one
+message from such a pair for signing and retain the other. The two classes
+have identical correct disclosures, suffix positions and checksums. If the
+signer returns its nonce-zero candidate, the same signature verifies on the
+other message whenever that message's fresh second gate succeeds, with
+probability approximately 1/71. A stronger checksum does not prevent reuse
+of unchanged values.
+
+For the prototype's fixed scan beginning at zero, the planted tier-zero
+candidate is always selected when its second gate succeeds, unless the
+prefix cap overflows. Its conditional overflow probability is below 2^-315.
+This gives forgery probability above 0.000197318544827.
+
+Uniformly sampling ordered distinct nonces from the 20-bit space does not
+rescue the construction. Nonce zero is included with probability 63/64.
+Requiring no other completed tier-zero candidate gives probability greater
+than 0.310694600286 for the remaining trials. The resulting forgery lower
+bound is above 0.000060347903189. Conservatively charging q first queries,
+all 1,024 key-generation compressions, the entire 2^20 signing budget and
+89 verification compressions gives an allowed probability below 2.776e-17.
+The lower bound exceeds it by more than **2.17 trillion times**.
+
+This is an exact rational certificate for the stated two-stage construction,
+not a universal nonce lower bound. The fixed-scan 91 prototype has the same
+policy problem despite its wider nominal nonce field. The separately
+proposed uniform-distinct 65-bit reference is not rejected by this specific
+calculation and still needs its own full pre-sign argument.
+
+### A separate hidden-root index direction
+
+To remove the public first-index input used above, one option is to serialize
+a 110-bit class index, reconstruct the 129-bit prefix root first, and check
+H(message,nonce,prefixRoot) against the serialized class. The signer already
+knows that root; the first input remains one compression at 405 bits. The
+signature metadata allows the verifier to reconstruct before checking the
+index. Secrecy of the root and all security consequences remain unproved.
+
+Charging the complete metadata, an exact screen of 1,139 trees and 2,914
+length allocations finds normalized capacity 4.50076 at score 91 for a fixed
+word count, or 4.67015 with canonical variable counts. Both are below the
+current schedule's approximately 4.75 requirement. This did not yet produce
+a replacement improvement; it identifies a concrete cost of hiding the
+first-index input.
+
+### Open questions for a replacement construction
+
+1. Find a mechanism that controls pre-sign class-pair replay while retaining
+   enough cut capacity. The rejected short-nonce construction cannot be
+   repaired by completing its old proof outline.
+2. Give a shared-oracle coupling that controls the combined weak, wide,
+   index and replay events against one actual query budget. Independent
+   bit-group probabilities cannot simply be multiplied into this game.
+3. Handle changed checksums with two through six changed coordinates.
+   A model containing only one gated candidate and seven ordinary marks
+   does not cover every such event; the Vandermonde support structure
+   supplies extra constraints that still need to be used.
+4. Extend the fixed-cut argument to different decoded cuts and prove the
+   pre-sign/cross-message statements with the much smaller nonce space.
+5. Formalize the constructive decoder, canonical wire and full resource,
+   correctness, availability and strong-security exports for any replacement.
+
+The community's [RISC-V PR #9](https://github.com/leanEthereum/ots.golf-submissions/pull/9#issuecomment-5748293743)
+reached a durable 693-cycle result, with its
+underlying compression scheme unchanged. Repository Discussions were still
+disabled on the latest capability check; these explicit questions remain
+in the submission notes for others to examine. The verified compression
+claim in this PR remains 92.
