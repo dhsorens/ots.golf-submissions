@@ -26,7 +26,7 @@ def C : ℝ := 99 / 98
 def alpha : ℝ := (977 / 1000) * kappa
 
 /-- Authentication followed by the completed-row excess payoff. -/
-def postRate : ℝ := kappa / 2 + C * ((48 / 100) * kappa)
+def postRate : ℝ := kappa / 2 + C * ((471 / 1000) * kappa)
 
 theorem kappa_pos : 0 < kappa := by
   unfold kappa Chain18Compact.kappa

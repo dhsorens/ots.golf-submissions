@@ -201,7 +201,7 @@ theorem excess_score_identity (r : Fin M → ℕ) :
     (r i : ℝ) * (referenceWeight i * excess i / classProbability i)
   ring
 
-/-- The empirical excess coordinate gives the sharp `47/100 + 1/100`
+/-- The empirical excess coordinate gives the sharp `47/100 + 1/1000`
 conditional-completion bound used after signing. -/
 theorem good_excess_payoff (c : Cache) (hc : LongChain91Empirical.Good c)
     (m : Message) :
@@ -209,7 +209,7 @@ theorem good_excess_payoff (c : Cache) (hc : LongChain91Empirical.Good c)
         (∑ i : Fin M, referenceWeight i * excess i) +
       LongChain91Empirical.excessWeights.score
         (classCounts (WideDomains.rowDomain m) c decode) / (2 : ℝ)^86 ≤
-        ((48 : ℝ) / 100) * Chain18Compact.kappa := by
+        ((471 : ℝ) / 1000) * Chain18Compact.kappa := by
   have hs := LongChain91Empirical.good_row_excess c hc m
   have hn : (0 : ℝ) < 2^86 := by positivity
   have hd := (div_le_div_iff_of_pos_right hn).mpr hs
@@ -220,20 +220,20 @@ theorem good_excess_payoff (c : Cache) (hc : LongChain91Empirical.Good c)
           (∑ i : Fin M, referenceWeight i * excess i) +
         (((∑ i : Fin M, referenceWeight i * excess i) *
             (seen (WideDomains.rowDomain m) c).card +
-          Chain18Compact.kappa * (2 : ℝ)^86 / 100) / (2 : ℝ)^86) =
+          Chain18Compact.kappa * (2 : ℝ)^86 / 1000) / (2 : ℝ)^86) =
         (∑ i : Fin M, referenceWeight i * excess i) +
-          Chain18Compact.kappa / 100 := by
+          Chain18Compact.kappa / 1000 := by
     ring
   calc
     _ ≤ (1 - ((seen (WideDomains.rowDomain m) c).card : ℝ) / (2 : ℝ)^86) *
           (∑ i : Fin M, referenceWeight i * excess i) +
         (((∑ i : Fin M, referenceWeight i * excess i) *
             (seen (WideDomains.rowDomain m) c).card +
-          Chain18Compact.kappa * (2 : ℝ)^86 / 100) / (2 : ℝ)^86) :=
+          Chain18Compact.kappa * (2 : ℝ)^86 / 1000) / (2 : ℝ)^86) :=
       add_le_add_right hd _
     _ = (∑ i : Fin M, referenceWeight i * excess i) +
-        Chain18Compact.kappa / 100 := he
-    _ ≤ ((48 : ℝ) / 100) * Chain18Compact.kappa := by
+        Chain18Compact.kappa / 1000 := he
+    _ ≤ ((471 : ℝ) / 1000) * Chain18Compact.kappa := by
       linarith
 
 theorem actual_excess_bound (m : Message) (c : Cache)
@@ -241,7 +241,7 @@ theorem actual_excess_bound (m : Message) (c : Cache)
     outE (WeightedSampling.loop 86 decode tier m Chain18Compact.L) c
       (fun s => ENNReal.ofReal (score s (fun r => excess r.2))) ≤
       ENNReal.ofReal ((99 : ℝ) / 98 *
-        (((48 : ℝ) / 100) * Chain18Compact.kappa) + tableFailure m c) := by
+        (((471 : ℝ) / 1000) * Chain18Compact.kappa) + tableFailure m c) := by
   rw [actual_sign_payoff m c (fun _ i => excess i)
     (fun _ i => LongChain91Empirical.excess_nonneg i)]
   apply ENNReal.ofReal_le_ofReal
@@ -352,7 +352,7 @@ theorem actual_excess_bound_full (m : Message) (c : Cache)
     outE (WeightedSampling.loop 86 decode tier m Chain18Compact.L) c
       (fun s => ENNReal.ofReal (score s (fun r => excess r.2))) ≤
       ENNReal.ofReal ((99 : ℝ) / 98 *
-        (((48 : ℝ) / 100) * Chain18Compact.kappa) +
+        (((471 : ℝ) / 1000) * Chain18Compact.kappa) +
           fullTableFailure c) := by
   rw [actual_sign_payoff m c (fun _ i => excess i)
     (fun _ i => LongChain91Empirical.excess_nonneg i)]

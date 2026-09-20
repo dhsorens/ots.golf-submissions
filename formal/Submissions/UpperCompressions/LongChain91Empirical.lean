@@ -602,7 +602,7 @@ def prefixBad (m : Message) (j : Tier) (c : hashSpec.QueryCache) : Prop :=
       (classCounts (WideDomains.rowDomain m) c cacheDecode)
 
 def scoreBad (m : Message) (c : hashSpec.QueryCache) : Prop :=
-  Chain18Compact.kappa * (2 : ℝ)^86 / 100 ≤
+  Chain18Compact.kappa * (2 : ℝ)^86 / 1000 ≤
     securityWeights.M1 (seen (WideDomains.rowDomain m) c).card
       (classCounts (WideDomains.rowDomain m) c cacheDecode)
 
@@ -676,7 +676,7 @@ theorem excessWeights_mean :
   field_simp [(LongChain91Security.classProbability_pos i).ne']
 
 def excessBad (m : Message) (c : hashSpec.QueryCache) : Prop :=
-  Chain18Compact.kappa * (2 : ℝ)^86 / 100 ≤
+  Chain18Compact.kappa * (2 : ℝ)^86 / 1000 ≤
     excessWeights.M1 (seen (WideDomains.rowDomain m) c).card
       (classCounts (WideDomains.rowDomain m) c cacheDecode)
 
@@ -716,33 +716,82 @@ theorem score_bound { α : Type } (m : Message) (oa : OracleComp Spec α)
     (c : hashSpec.QueryCache)
     (hf : ∀ q : Query, q.1 = 342 → c q = none) :
     crossing oa c (scoreBad m) ≤
-      ENNReal.ofReal (Real.exp (-(2^30 : ℝ))) := by
+      ENNReal.ofReal (Real.exp (-(2^27 : ℝ))) := by
   obtain ⟨hq, hk⟩ := row_initial m c hf
   have hfiber : ∀ x,
       ((Finset.univ.filter (fun b : BitVec hashBits => cacheDecode b = x)).card : ℝ) /
         Fintype.card (BitVec hashBits) = securityWeights.classMass x :=
     cache_decoder_law
-  have hG : 0 < (Chain18Compact.L : ℝ) * Chain18Compact.kappa := by
-    exact mul_pos (by norm_num [Chain18Compact.L])
-      (by norm_num [Chain18Compact.kappa])
-  have h := WeightedProtectedCache.row_score securityWeights
-    (WideDomains.rowDomain m) (WideDomains.row_card m).le cacheDecode
-    hfiber false
-    ((Chain18Compact.L : ℝ) * Chain18Compact.kappa)
-    hG securityScore_le oa c hq hk
-  have he : ((Chain18Compact.L : ℝ) * Chain18Compact.kappa) * (2 : ℝ)^86 /
-      (100 * (2 : ℝ)^20) = Chain18Compact.kappa * (2 : ℝ)^86 / 100 := by
-    norm_num [Chain18Compact.L]
-    ring
-  rw [he] at h
-  change crossing oa c (scoreBad m) ≤ _ at h
-  exact h
+  let G : ℝ := (Chain18Compact.L : ℝ) * Chain18Compact.kappa / 2
+  let N : ℝ := (2 : ℝ)^86
+  let a : ℝ := Chain18Compact.kappa * (2 : ℝ)^86 / 1000
+  have hG : 0 < G := by
+    dsimp only [G]
+    exact div_pos
+      (mul_pos (by norm_num [Chain18Compact.L])
+        (by norm_num [Chain18Compact.kappa])) (by norm_num)
+  have hN : 0 < N := by dsimp only [N]; positivity
+  have ha : 0 < a := by
+    dsimp only [a]
+    exact div_pos
+      (mul_pos (by norm_num [Chain18Compact.kappa]) (by positivity))
+      (by norm_num)
+  have hx := WeightedActualScore.row_freedman securityWeights oracleImpl
+    (fun d => (seen (WideDomains.rowDomain m) d).card)
+    (fun d => classCounts (WideDomains.rowDomain m) d cacheDecode)
+    (WeightedDirectCache.protectedFresh (WideDomains.rowDomain m))
+    (WeightedProtectedCache.query_law securityWeights
+      (WideDomains.rowDomain m) cacheDecode hfiber)
+    false G N a hG LongChain91Security.referenceWeight_le hN ha oa c hq hk
+  have hcap (d : hashSpec.QueryCache) :
+      ((seen (WideDomains.rowDomain m) d).card : ℝ) ≤ N := by
+    dsimp only [N]
+    exact_mod_cast
+      (WeightedCacheCounts.seen_card_le (WideDomains.rowDomain m) d).trans
+        (WideDomains.row_card m).le
+  have hhit :
+      (fun (_ : ℕ) (d : hashSpec.QueryCache) =>
+        ((seen (WideDomains.rowDomain m) d).card : ℝ) ≤ N ∧
+          a ≤ WeightedActualScore.signedM1 securityWeights
+            (fun e => (seen (WideDomains.rowDomain m) e).card)
+            (fun e => classCounts (WideDomains.rowDomain m) e cacheDecode)
+            false d) =
+      (fun (_ : ℕ) (d : hashSpec.QueryCache) =>
+        a ≤ WeightedActualScore.signedM1 securityWeights
+          (fun e => (seen (WideDomains.rowDomain m) e).card)
+          (fun e => classCounts (WideDomains.rowDomain m) e cacheDecode)
+          false d) := by
+    funext n d
+    apply propext
+    constructor
+    · exact And.right
+    · intro hd
+      exact ⟨hcap d, hd⟩
+  have hkill :
+      (fun (_ : ℕ) (d : hashSpec.QueryCache) =>
+        N < ((seen (WideDomains.rowDomain m) d).card : ℝ)) =
+      (fun (_ : ℕ) (_ : hashSpec.QueryCache) => False) := by
+    funext n d
+    exact propext (iff_false_intro (not_lt_of_ge (hcap d)))
+  dsimp only at hx
+  rw [hhit, hkill] at hx
+  have hexponent :
+      (2^27 : ℝ) ≤ a^2 / (2 * (G^2 * N + G * a / 3)) := by
+    norm_num [a, G, N, Chain18Compact.L, Chain18Compact.kappa]
+  have hexp :
+      Real.exp (-a^2 / (2 * (G^2 * N + G * a / 3))) ≤
+        Real.exp (-(2^27 : ℝ)) := by
+    apply Real.exp_le_exp.mpr
+    simpa only [neg_div] using neg_le_neg hexponent
+  have htail := hx.trans (ENNReal.ofReal_le_ofReal hexp)
+  change crossing oa c (scoreBad m) ≤ _ at htail
+  exact htail
 
 theorem excess_bound { α : Type } (m : Message) (oa : OracleComp Spec α)
     (c : hashSpec.QueryCache)
     (hf : ∀ q : Query, q.1 = 342 → c q = none) :
     crossing oa c (excessBad m) ≤
-      ENNReal.ofReal (Real.exp (-(2^30 : ℝ))) := by
+      ENNReal.ofReal (Real.exp (-(2^25 : ℝ))) := by
   obtain ⟨hq, hk⟩ := row_initial m c hf
   have hfiber : ∀ x,
       ((Finset.univ.filter (fun b : BitVec hashBits => cacheDecode b = x)).card : ℝ) /
@@ -751,21 +800,69 @@ theorem excess_bound { α : Type } (m : Message) (oa : OracleComp Spec α)
     exact (cache_decoder_law x).trans
       (WeightedRow.Weights.withScore_classMass securityWeights
         excessScore excessScore_nonneg x).symm
-  have hG : 0 < (Chain18Compact.L : ℝ) * Chain18Compact.kappa := by
+  let G : ℝ := (Chain18Compact.L : ℝ) * Chain18Compact.kappa
+  let N : ℝ := (2 : ℝ)^86
+  let a : ℝ := Chain18Compact.kappa * (2 : ℝ)^86 / 1000
+  have hG : 0 < G := by
+    dsimp only [G]
     exact mul_pos (by norm_num [Chain18Compact.L])
       (by norm_num [Chain18Compact.kappa])
-  have h := WeightedProtectedCache.row_score excessWeights
-    (WideDomains.rowDomain m) (WideDomains.row_card m).le cacheDecode
-    hfiber
-    false ((Chain18Compact.L : ℝ) * Chain18Compact.kappa)
-    hG excessScore_le oa c hq hk
-  have he : ((Chain18Compact.L : ℝ) * Chain18Compact.kappa) * (2 : ℝ)^86 /
-      (100 * (2 : ℝ)^20) = Chain18Compact.kappa * (2 : ℝ)^86 / 100 := by
-    norm_num [Chain18Compact.L]
-    ring
-  rw [he] at h
-  change crossing oa c (excessBad m) ≤ _ at h
-  exact h
+  have hN : 0 < N := by dsimp only [N]; positivity
+  have ha : 0 < a := by
+    dsimp only [a]
+    exact div_pos
+      (mul_pos (by norm_num [Chain18Compact.kappa]) (by positivity))
+      (by norm_num)
+  have hx := WeightedActualScore.row_freedman excessWeights oracleImpl
+    (fun d => (seen (WideDomains.rowDomain m) d).card)
+    (fun d => classCounts (WideDomains.rowDomain m) d cacheDecode)
+    (WeightedDirectCache.protectedFresh (WideDomains.rowDomain m))
+    (WeightedProtectedCache.query_law excessWeights
+      (WideDomains.rowDomain m) cacheDecode hfiber)
+    false G N a hG excessScore_le hN ha oa c hq hk
+  have hcap (d : hashSpec.QueryCache) :
+      ((seen (WideDomains.rowDomain m) d).card : ℝ) ≤ N := by
+    dsimp only [N]
+    exact_mod_cast
+      (WeightedCacheCounts.seen_card_le (WideDomains.rowDomain m) d).trans
+        (WideDomains.row_card m).le
+  have hhit :
+      (fun (_ : ℕ) (d : hashSpec.QueryCache) =>
+        ((seen (WideDomains.rowDomain m) d).card : ℝ) ≤ N ∧
+          a ≤ WeightedActualScore.signedM1 excessWeights
+            (fun e => (seen (WideDomains.rowDomain m) e).card)
+            (fun e => classCounts (WideDomains.rowDomain m) e cacheDecode)
+            false d) =
+      (fun (_ : ℕ) (d : hashSpec.QueryCache) =>
+        a ≤ WeightedActualScore.signedM1 excessWeights
+          (fun e => (seen (WideDomains.rowDomain m) e).card)
+          (fun e => classCounts (WideDomains.rowDomain m) e cacheDecode)
+          false d) := by
+    funext n d
+    apply propext
+    constructor
+    · exact And.right
+    · intro hd
+      exact ⟨hcap d, hd⟩
+  have hkill :
+      (fun (_ : ℕ) (d : hashSpec.QueryCache) =>
+        N < ((seen (WideDomains.rowDomain m) d).card : ℝ)) =
+      (fun (_ : ℕ) (_ : hashSpec.QueryCache) => False) := by
+    funext n d
+    exact propext (iff_false_intro (not_lt_of_ge (hcap d)))
+  dsimp only at hx
+  rw [hhit, hkill] at hx
+  have hexponent :
+      (2^25 : ℝ) ≤ a^2 / (2 * (G^2 * N + G * a / 3)) := by
+    norm_num [a, G, N, Chain18Compact.L, Chain18Compact.kappa]
+  have hexp :
+      Real.exp (-a^2 / (2 * (G^2 * N + G * a / 3))) ≤
+        Real.exp (-(2^25 : ℝ)) := by
+    apply Real.exp_le_exp.mpr
+    simpa only [neg_div] using neg_le_neg hexponent
+  have htail := hx.trans (ENNReal.ofReal_le_ofReal hexp)
+  change crossing oa c (excessBad m) ≤ _ at htail
+  exact htail
 
 /-- The row-local event coordinate: 160 prefix deficits, then the reference
 score and literal post-sign excess score. -/
@@ -780,20 +877,38 @@ def event : BadIndex → hashSpec.QueryCache → Prop
 theorem event_bound { α : Type } (oa : OracleComp Spec α)
     (c : hashSpec.QueryCache)
     (hf : ∀ q : Query, q.1 = 342 → c q = none) (i : BadIndex) :
-    crossing oa c (event i) ≤ ENNReal.ofReal (Real.exp (-(2^30 : ℝ))) := by
+    crossing oa c (event i) ≤ ENNReal.ofReal (Real.exp (-(2^25 : ℝ))) := by
+  have h30 : Real.exp (-(2^30 : ℝ)) ≤ Real.exp (-(2^25 : ℝ)) := by
+    exact Real.exp_le_exp.mpr (by norm_num)
+  have h27 : Real.exp (-(2^27 : ℝ)) ≤ Real.exp (-(2^25 : ℝ)) := by
+    exact Real.exp_le_exp.mpr (by norm_num)
   obtain ⟨m, j⟩ := i
   dsimp only [event]
   split_ifs with h h'
-  · exact prefix_bound m ⟨j.val, h⟩ oa c hf
-  · exact score_bound m oa c hf
+  · exact (prefix_bound m ⟨j.val, h⟩ oa c hf).trans
+      (ENNReal.ofReal_le_ofReal h30)
+  · exact (score_bound m oa c hf).trans
+      (ENNReal.ofReal_le_ofReal h27)
   · exact excess_bound m oa c hf
 
 def Good (c : hashSpec.QueryCache) : Prop := ∀ i : BadIndex, ¬ event i c
 
 theorem row162_union_margin :
-    (162 * (2^256 : ℝ)) * Real.exp (-(2^30 : ℝ)) ≤
+    (162 * (2^256 : ℝ)) * Real.exp (-(2^25 : ℝ)) ≤
       ((2 : ℝ)^512)⁻¹ := by
-  have hm := mul_le_mul_of_nonneg_left WeightedEmpirical.exp_neg_pow30_le
+  have hexp : Real.exp (-(2^25 : ℝ)) ≤ ((2 : ℝ)^1024)⁻¹ := by
+    have hmono : Real.exp (-(2^25 : ℝ)) ≤ Real.exp (-(1024 : ℝ)) := by
+      exact Real.exp_le_exp.mpr (by norm_num)
+    have he : (2 : ℝ) ≤ Real.exp 1 := by
+      linarith [Real.add_one_le_exp (1 : ℝ)]
+    have hp : (2 : ℝ)^1024 ≤ (Real.exp 1)^1024 :=
+      pow_le_pow_left₀ (by norm_num) he 1024
+    rw [← Real.exp_nat_mul, mul_one] at hp
+    have htail : Real.exp (-(1024 : ℝ)) ≤ ((2 : ℝ)^1024)⁻¹ := by
+      rw [Real.exp_neg]
+      exact (inv_le_inv₀ (Real.exp_pos _) (by positivity)).2 hp
+    exact hmono.trans htail
+  have hm := mul_le_mul_of_nonneg_left hexp
     (show 0 ≤ 162 * (2^256 : ℝ) by positivity)
   have hfactor : 162 * (2^256 : ℝ) ≤ (2 : ℝ)^512 := by
     have hbase : (162 : ℝ) ≤ 2^256 := by norm_num
@@ -815,16 +930,16 @@ theorem all_crossings { α : Type } (oa : OracleComp Spec α)
       ENNReal.ofReal (((2 : ℝ)^512)⁻¹) := by
   have hu := WeightedOracleExecution.stopped_hit_union_uniform oracleImpl
     (fun i _ c => event i c) oa 0 c
-    (ENNReal.ofReal (Real.exp (-(2^30 : ℝ)))) (event_bound oa c hf)
+    (ENNReal.ofReal (Real.exp (-(2^25 : ℝ)))) (event_bound oa c hf)
   calc
     crossing oa c (fun d => ∃ i : BadIndex, event i d) ≤
         (Fintype.card BadIndex : ℝ≥0∞) *
-          ENNReal.ofReal (Real.exp (-(2^30 : ℝ))) := hu
+          ENNReal.ofReal (Real.exp (-(2^25 : ℝ))) := hu
     _ = ENNReal.ofReal
-        ((Fintype.card BadIndex : ℝ) * Real.exp (-(2^30 : ℝ))) := by
+        ((Fintype.card BadIndex : ℝ) * Real.exp (-(2^25 : ℝ))) := by
       rw [ENNReal.ofReal_mul (by positivity), ENNReal.ofReal_natCast]
     _ = ENNReal.ofReal
-        ((162 * (2^256 : ℝ)) * Real.exp (-(2^30 : ℝ))) := by
+        ((162 * (2^256 : ℝ)) * Real.exp (-(2^25 : ℝ))) := by
       congr 2
       norm_num [BadIndex, RowEvent, Message, msgBits, Fintype.card_prod,
         Fintype.card_bitVec]
@@ -867,7 +982,7 @@ theorem good_row_score (c : hashSpec.QueryCache) (hc : Good c)
     (m : Message) :
     securityWeights.score (classCounts (WideDomains.rowDomain m) c cacheDecode) ≤
       securityWeights.mean * (seen (WideDomains.rowDomain m) c).card +
-        Chain18Compact.kappa * (2 : ℝ)^86 / 100 := by
+        Chain18Compact.kappa * (2 : ℝ)^86 / 1000 := by
   have h := hc (m, ⟨160, by decide⟩)
   change ¬ scoreBad m c at h
   have hh := lt_of_not_ge h
@@ -880,7 +995,7 @@ theorem good_row_excess (c : hashSpec.QueryCache) (hc : Good c)
     excessWeights.score (classCounts (WideDomains.rowDomain m) c cacheDecode) ≤
       (∑ i : Fin M, referenceWeight i * excess i) *
           (seen (WideDomains.rowDomain m) c).card +
-        Chain18Compact.kappa * (2 : ℝ)^86 / 100 := by
+        Chain18Compact.kappa * (2 : ℝ)^86 / 1000 := by
   have h := hc (m, ⟨161, by decide⟩)
   change ¬ excessBad m c at h
   have hh := lt_of_not_ge h

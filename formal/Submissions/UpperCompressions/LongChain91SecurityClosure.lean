@@ -90,7 +90,7 @@ theorem successValue_le_one (b : Bool) : successValue b ≤ 1 := by
 def SmallActualGameBound : Prop :=
   ∀ (A : typed.Adversary) (B : ℕ),
     CostAtMost (typed.experiment A) B →
-    (B : ℝ) ≤ (2 : ℝ) ^ 86 / 10 →
+    (B : ℝ) ≤ (2 : ℝ) ^ 86 / 64 →
     B ≤ 2 ^ 127 →
     E (run (typed.experiment A) ∅) (fun x => successValue x.1) ≤
       ENNReal.ofReal ((6235189 : ℝ) / 6272000 * kappa * (B : ℝ))
@@ -100,7 +100,7 @@ inverse security-rate endpoint. -/
 def LargeActualGameBound : Prop :=
   ∀ (A : typed.Adversary) (B : ℕ),
     CostAtMost (typed.experiment A) B →
-    (2 : ℝ) ^ 86 / 10 ≤ (B : ℝ) →
+    (2 : ℝ) ^ 86 / 64 ≤ (B : ℝ) →
     B ≤ 2 ^ 127 →
     E (run (typed.experiment A) ∅) (fun x => successValue x.1) ≤
       ENNReal.ofReal ((2423 : ℝ) / 2450 * kappa * (B : ℝ))
@@ -133,7 +133,7 @@ theorem typed_secure_of_bounds
     mul_pos (by norm_num [kappa]) hpos
   rw [probTrue_eq_success, ← security_rate]
   by_cases hcap : B ≤ 2 ^ 127
-  · by_cases hsmall : (B : ℝ) ≤ (2 : ℝ) ^ 86 / 10
+  · by_cases hsmall : (B : ℝ) ≤ (2 : ℝ) ^ 86 / 64
     · exact (small A B hB hsmall hcap).trans_lt
         ((ENNReal.ofReal_lt_ofReal_iff hrate).mpr (small_strict B hpos))
     · exact (large A B hB (le_of_not_ge hsmall) hcap).trans_lt
