@@ -201,7 +201,7 @@ set_option maxRecDepth 10000
 set_option maxHeartbeats 800000
 namespace OptimalOTS.WeightedConstruction.LongChain91InitialGame
 open OptimalOTS.Dag LongChain91 LongChain91.Name WeightedReplacement WeightedSampling
-attribute [local irreducible] Finset.univ Finset.filter graph CostAtMost 
+attribute [local irreducible] Finset.univ Finset.filter graph CostAtMost
 variable (A : scheme.toAlgorithm.Adversary)
 
 theorem kc_indexLength_none (ξ : Rec) (q : Query) (hq : q.1 = msgBits+86) : kc ξ q = none := by
@@ -268,7 +268,7 @@ set_option maxRecDepth 10000
 set_option maxHeartbeats 1000000
 namespace OptimalOTS.WeightedConstruction.LongChain91InitialGame
 open OptimalOTS.Dag LongChain91 LongChain91.Name WeightedReplacement WeightedSampling
-attribute [local irreducible] Finset.univ Finset.filter graph CostAtMost 
+attribute [local irreducible] Finset.univ Finset.filter graph CostAtMost
 variable (A : scheme.toAlgorithm.Adversary)
 
 theorem fiber_nonempty (pk : PublicKey) : (fiberA pk).Nonempty := by
@@ -375,7 +375,7 @@ set_option maxRecDepth 10000
 set_option maxHeartbeats 800000
 namespace OptimalOTS.WeightedConstruction.LongChain91InitialGame
 open OptimalOTS.Dag LongChain91 LongChain91.Name WeightedReplacement
-attribute [local irreducible] Finset.univ Finset.filter 
+attribute [local irreducible] Finset.univ Finset.filter
 variable (A : scheme.toAlgorithm.Adversary)
 
 def hitMass (pk : PublicKey) (d : Cache) : ℝ≥0∞ :=

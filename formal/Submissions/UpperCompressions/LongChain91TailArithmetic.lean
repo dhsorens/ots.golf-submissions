@@ -73,4 +73,3 @@ theorem completion_exception_margin_ennreal (B : ℕ) (hB : 1219 ≤ B)
 #print axioms completion_exception_margin_ennreal
 
 end OptimalOTS.WeightedConstruction.LongChain91TailArithmetic
-

@@ -21,7 +21,7 @@ set_option maxRecDepth 10000
 set_option maxHeartbeats 800000
 namespace OptimalOTS.WeightedConstruction.LongChain91InitialGame
 open OptimalOTS.Dag LongChain91 LongChain91.Name WeightedReplacement WeightedSampling
-attribute [local irreducible] Finset.univ Finset.filter 
+attribute [local irreducible] Finset.univ Finset.filter
 variable (A : scheme.toAlgorithm.Adversary)
 
 theorem afterChoose_reserve (pk : PublicKey) (ξ : Rec) (x : Message × A.State)
@@ -65,7 +65,7 @@ set_option maxRecDepth 10000
 set_option maxHeartbeats 800000
 namespace OptimalOTS.WeightedConstruction.LongChain91InitialGame
 open OptimalOTS.Dag LongChain91 LongChain91.Name WeightedReplacement WeightedSampling
-attribute [local irreducible] Finset.univ Finset.filter 
+attribute [local irreducible] Finset.univ Finset.filter
 variable (A : scheme.toAlgorithm.Adversary)
 
 theorem choose_spent_post_remaining_le {B : ℕ}
