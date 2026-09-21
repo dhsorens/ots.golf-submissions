@@ -77,6 +77,13 @@ three pair words, `0x7C` for the singles word) instead of seven, and one 4-instr
   `stepsFrom 0 = 243` (`fixedPositions_sum`).
 - `Verifier.lean`: `cycleBound = 394`, `verifier.length = 12494` and admissibility by
   `decide +kernel` (about ten seconds). `Solution.lean`: `image_size` is `4 · 12494 + 104 = 50080`.
+- `WireAdapter.lean`, `Wire.lean`: core `1bd23e5` added `Admissible.verifyCost`, verification
+  within `verifyBudget = 2 ^ 20` compressions (it stops an expensive verifier from inflating the
+  budget `B` that `Secure` quantifies over). `WireAdapter.admissible` now takes the typed
+  scheme's verification-cost bound and weakens it with `VerifyCostAtMost.mono`; `Wire.lean`
+  passes the forest's `255` and `by decide`. A root without the field is rejected with
+  `Fields missing: verifyCost` in `WireAdapter.lean` — the error names the adapter, not the
+  scheme, because that is where the structure is built.
 
 ## Cost
 
